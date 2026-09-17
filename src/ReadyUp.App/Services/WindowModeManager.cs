@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Media.Animation;
+using Microsoft.Extensions.DependencyInjection;
 using ReadyUp.App.Views;
 using ReadyUp.Core.Interfaces;
 using ReadyUp.Core.Models;
@@ -12,25 +13,36 @@ namespace ReadyUp.App.Services;
 /// between them. The window not currently shown is hidden rather than
 /// closed, so its visual tree/animations/scroll position survive repeated
 /// toggling. Both windows are bound to the same LibraryViewModel instance.
+///
+/// The windows are resolved lazily from <see cref="IServiceProvider"/> (not
+/// constructor-injected) specifically to avoid a circular dependency: both
+/// MainWindow and FullScreenWindow take this manager as a constructor
+/// dependency so they can trigger mode switches, and the DI container
+/// cannot construct two singletons that each require the other. Resolving
+/// them on first use instead means this manager itself has no dependency
+/// on either window, breaking the cycle.
 /// </summary>
 public sealed class WindowModeManager
 {
     private static readonly TimeSpan FadeDuration = TimeSpan.FromMilliseconds(150);
 
-    private readonly MainWindow _mainWindow;
-    private readonly FullScreenWindow _fullScreenWindow;
+    private readonly IServiceProvider _services;
     private readonly ISettingsService _settingsService;
+    private MainWindow? _mainWindow;
+    private FullScreenWindow? _fullScreenWindow;
 
     public ShellMode CurrentMode { get; private set; } = ShellMode.Windowed;
 
     public event EventHandler<ShellMode>? ModeChanged;
 
-    public WindowModeManager(MainWindow mainWindow, FullScreenWindow fullScreenWindow, ISettingsService settingsService)
+    public WindowModeManager(IServiceProvider services, ISettingsService settingsService)
     {
-        _mainWindow = mainWindow;
-        _fullScreenWindow = fullScreenWindow;
+        _services = services;
         _settingsService = settingsService;
     }
+
+    private MainWindow MainWindowInstance => _mainWindow ??= _services.GetRequiredService<MainWindow>();
+    private FullScreenWindow FullScreenWindowInstance => _fullScreenWindow ??= _services.GetRequiredService<FullScreenWindow>();
 
     /// <summary>Shows the preferred startup window. Call once from App.OnStartup.</summary>
     public void Start()
@@ -53,16 +65,16 @@ public sealed class WindowModeManager
 
     public void ShowWindowed()
     {
-        ConfigureWindowed(_mainWindow);
-        TransitionTo(_mainWindow, _fullScreenWindow);
+        ConfigureWindowed(MainWindowInstance);
+        TransitionTo(MainWindowInstance, FullScreenWindowInstance);
         CurrentMode = ShellMode.Windowed;
         ModeChanged?.Invoke(this, CurrentMode);
     }
 
     public void ShowFullScreen()
     {
-        ConfigureFullScreen(_fullScreenWindow);
-        TransitionTo(_fullScreenWindow, _mainWindow);
+        ConfigureFullScreen(FullScreenWindowInstance);
+        TransitionTo(FullScreenWindowInstance, MainWindowInstance);
         CurrentMode = ShellMode.FullScreen;
         ModeChanged?.Invoke(this, CurrentMode);
     }

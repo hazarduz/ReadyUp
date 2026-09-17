@@ -64,6 +64,22 @@ public sealed class GamepadService : IDisposable
     {
         if (!OperatingSystem.IsWindows()) return;
 
+        // This runs on a ThreadPool thread via a bare Timer callback: an exception
+        // here is unhandled-on-a-background-thread, which terminates the entire
+        // process with no window ever shown. A bad controller driver / XInput
+        // hiccup must never be allowed to take the whole app down with it.
+        try
+        {
+            PollCore();
+        }
+        catch (Exception)
+        {
+            // Best-effort: skip this tick and try again on the next one.
+        }
+    }
+
+    private void PollCore()
+    {
         for (var i = 0; i < XInput.MaxControllers; i++)
         {
             var result = XInput.XInputGetState(i, out var raw);
