@@ -77,8 +77,8 @@ public sealed partial class ChangeArtViewModel : ObservableObject
         var path = _fileDialogService.PickImageFile();
         if (string.IsNullOrWhiteSpace(path)) return;
 
-        var destination = await _artCache.SaveFromFileAsync(game.Id, SelectedType, path).ConfigureAwait(false);
-        await _libraryService.SetArtAsync(game.Id, SelectedType, destination, ArtSource.LocalFile, sourceUrl: null).ConfigureAwait(false);
+        var destination = await _artCache.SaveFromFileAsync(game.Id, SelectedType, path);
+        await _libraryService.SetArtAsync(game.Id, SelectedType, destination, ArtSource.LocalFile, sourceUrl: null);
         StatusMessage = $"{SelectedTypeLabel} updated from local file.";
     }
 
@@ -94,7 +94,7 @@ public sealed partial class ChangeArtViewModel : ObservableObject
         {
             foreach (var provider in _artProviders.Where(p => p.IsAvailable))
             {
-                var results = await provider.SearchAsync(game.Game, SelectedType).ConfigureAwait(false);
+                var results = await provider.SearchAsync(game.Game, SelectedType);
                 foreach (var candidate in results)
                 {
                     SearchResults.Add(candidate);
@@ -121,8 +121,8 @@ public sealed partial class ChangeArtViewModel : ObservableObject
         if (provider is null) return;
 
         var destination = _artCache.GetPath(game.Id, SelectedType);
-        await provider.ApplyAsync(candidate, destination).ConfigureAwait(false);
-        await _libraryService.SetArtAsync(game.Id, SelectedType, destination, ArtSource.SteamGridDb, candidate.FullImageUrl).ConfigureAwait(false);
+        await provider.ApplyAsync(candidate, destination);
+        await _libraryService.SetArtAsync(game.Id, SelectedType, destination, ArtSource.SteamGridDb, candidate.FullImageUrl);
         StatusMessage = $"{SelectedTypeLabel} updated from {candidate.ProviderName}.";
     }
 }

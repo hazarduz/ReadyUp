@@ -79,18 +79,15 @@ public sealed partial class LibraryViewModel : ObservableObject
         if (_initialized) return;
         _initialized = true;
 
-        await _scanCache.LoadAsync().ConfigureAwait(false);
+        await _scanCache.LoadAsync();
 
-        var existing = await _libraryService.GetLibraryAsync().ConfigureAwait(false);
-        RunOnUiThread(() =>
+        var existing = await _libraryService.GetLibraryAsync();
+        foreach (var game in existing.Where(g => !g.IsHidden))
         {
-            foreach (var game in existing.Where(g => !g.IsHidden))
-            {
-                Games.Add(new GameViewModel(game));
-            }
-        });
+            Games.Add(new GameViewModel(game));
+        }
 
-        await ScanForGamesAsync().ConfigureAwait(false);
+        await ScanForGamesAsync();
     }
 
     [RelayCommand(CanExecute = nameof(CanScan))]
@@ -102,18 +99,27 @@ public sealed partial class LibraryViewModel : ObservableObject
 
         try
         {
-            await foreach (var result in _scanner.ScanAsync())
+            // The scanners (drive walk, registry read) do real synchronous file/registry
+            // I/O between their few genuine await points, so without Task.Run this loop
+            // would run on the calling (UI) thread and freeze the window for the whole
+            // scan. UpsertFromScanResultAsync/EnrichAsync are safe to call from a
+            // background thread; only the property writes above/below need the UI thread,
+            // which is where this method resumes once Task.Run's awaited work completes.
+            await Task.Run(async () =>
             {
-                if (result.Confidence < 0.15) continue;
+                await foreach (var result in _scanner.ScanAsync())
+                {
+                    if (result.Confidence < 0.15) continue;
 
-                var game = await _libraryService.UpsertFromScanResultAsync(result).ConfigureAwait(false);
-                discovered++;
-                _ = _metadataAggregator.EnrichAsync(game); // fire-and-forget; UI updates via GameUpdated events as fields land.
-            }
+                    var game = await _libraryService.UpsertFromScanResultAsync(result);
+                    discovered++;
+                    _ = _metadataAggregator.EnrichAsync(game); // fire-and-forget; UI updates via GameUpdated events as fields land.
+                }
+            });
         }
         finally
         {
-            await _scanCache.SaveAsync().ConfigureAwait(false);
+            await _scanCache.SaveAsync();
             IsScanning = false;
             StatusText = discovered > 0 ? $"Scan complete — {discovered} game(s) found" : "Scan complete";
         }
@@ -128,7 +134,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(path)) return;
 
         var result = _manualGameAdder.FromExecutable(path);
-        var game = await _libraryService.UpsertFromScanResultAsync(result).ConfigureAwait(false);
+        var game = await _libraryService.UpsertFromScanResultAsync(result);
         _ = _metadataAggregator.EnrichAsync(game);
     }
 
@@ -170,7 +176,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     {
         try
         {
-            await process.WaitForExitAsync().ConfigureAwait(false);
+            await process.WaitForExitAsync();
         }
         catch (InvalidOperationException)
         {
@@ -178,14 +184,14 @@ public sealed partial class LibraryViewModel : ObservableObject
         }
 
         var duration = DateTime.UtcNow - startedUtc;
-        await _libraryService.RecordPlaySessionAsync(gameId, duration).ConfigureAwait(false);
+        await _libraryService.RecordPlaySessionAsync(gameId, duration);
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private async Task RemoveSelectedGameAsync()
     {
         if (SelectedGame is null) return;
-        await _libraryService.RemoveAsync(SelectedGame.Id).ConfigureAwait(false);
+        await _libraryService.RemoveAsync(SelectedGame.Id);
     }
 
     public async Task ApplyMetadataEditAsync(GameViewModel game, string title, string? description, string? publisher, string? developer)
@@ -200,7 +206,7 @@ public sealed partial class LibraryViewModel : ObservableObject
                 g.Publisher = publisher;
                 g.Developer = developer;
             },
-            editedFields).ConfigureAwait(false);
+            editedFields);
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
@@ -211,7 +217,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         await _libraryService.ApplyManualEditAsync(
             SelectedGame.Id,
             g => g.IsFavorite = newValue,
-            Array.Empty<string>()).ConfigureAwait(false);
+            Array.Empty<string>());
     }
 
     private void AddOrUpdate(Game game)

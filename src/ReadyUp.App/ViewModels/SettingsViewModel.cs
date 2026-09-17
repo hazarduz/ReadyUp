@@ -74,14 +74,14 @@ public sealed partial class SettingsViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(folder) || AdditionalLibraryFolders.Contains(folder)) return;
 
         AdditionalLibraryFolders.Add(folder);
-        await SaveAsync().ConfigureAwait(false);
+        await SaveAsync();
     }
 
     [RelayCommand]
     private async Task RemoveLibraryFolderAsync(string folder)
     {
         AdditionalLibraryFolders.Remove(folder);
-        await SaveAsync().ConfigureAwait(false);
+        await SaveAsync();
     }
 
     [RelayCommand]
@@ -99,6 +99,6 @@ public sealed partial class SettingsViewModel : ObservableObject
             settings.IgdbClientId = IgdbClientId;
             settings.IgdbClientSecret = IgdbClientSecret;
             settings.AdditionalLibraryFolders = AdditionalLibraryFolders.ToList();
-        }).ConfigureAwait(false);
+        });
     }
 }
