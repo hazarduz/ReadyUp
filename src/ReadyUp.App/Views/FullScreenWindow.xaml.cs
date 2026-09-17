@@ -77,7 +77,7 @@ public partial class FullScreenWindow : Window
         }
     }
 
-    private void GameTile_GotKeyboardFocus(object sender, RoutedEventArgs e)
+    private void GameTile_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: GameViewModel game }) return;
         UpdateBackground(game.BackgroundPath ?? game.BoxArtPath);

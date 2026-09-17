@@ -55,6 +55,15 @@ public static class WinEnum
 }
 '@
 
+# Seed one discoverable "game" so the scan actually populates the library
+# grid before we check anything. Without this, CI has zero games to scan,
+# so ItemsControl never materializes a single GameTileControl - which is
+# exactly how a previous version of this smoke test missed a XAML binding
+# crash that only fired once a real game tile got laid out.
+$gameDir = "C:\Games\SmokeTestGame"
+New-Item -ItemType Directory -Path $gameDir -Force | Out-Null
+Copy-Item -Path "$env:WINDIR\System32\notepad.exe" -Destination "$gameDir\SmokeTestGame.exe" -Force
+
 $proc = Start-Process -FilePath $ExePath -PassThru
 Start-Sleep -Seconds 10
 $proc.Refresh()
