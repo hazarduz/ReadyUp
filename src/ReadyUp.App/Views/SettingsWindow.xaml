@@ -1,0 +1,68 @@
+<Window x:Class="ReadyUp.App.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ReadyUp.App.ViewModels"
+        xmlns:core="clr-namespace:ReadyUp.Core.Models;assembly=ReadyUp.Core"
+        d:DataContext="{d:DesignInstance vm:SettingsViewModel}"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008/design"
+        mc:Ignorable="d"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        Style="{StaticResource AppWindowStyle}"
+        Title="Settings" Height="680" Width="560" WindowStartupLocation="CenterOwner">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+        <StackPanel>
+            <TextBlock Text="Settings" Style="{StaticResource TitleTextStyle}" Margin="0,0,0,20"/>
+
+            <TextBlock Text="UI Scale" Style="{StaticResource SubtitleTextStyle}"/>
+            <DockPanel Margin="0,4,0,16">
+                <TextBlock Text="{Binding UiScale, StringFormat={}{0:P0}}" Width="50" VerticalAlignment="Center"/>
+                <Slider Minimum="0.75" Maximum="1.5" Value="{Binding UiScale}" TickFrequency="0.05" IsSnapToTickEnabled="True"/>
+            </DockPanel>
+
+            <TextBlock Text="Startup Mode" Style="{StaticResource SubtitleTextStyle}"/>
+            <ComboBox Margin="0,4,0,16" SelectedValuePath="Tag" SelectedValue="{Binding PreferredStartupMode}">
+                <ComboBoxItem Content="Windowed" Tag="{x:Static core:ShellMode.Windowed}"/>
+                <ComboBoxItem Content="Full Screen (Big Picture)" Tag="{x:Static core:ShellMode.FullScreen}"/>
+            </ComboBox>
+
+            <TextBlock Text="Controller Deadzone" Style="{StaticResource SubtitleTextStyle}"/>
+            <DockPanel Margin="0,4,0,16">
+                <TextBlock Text="{Binding GamepadDeadzone, StringFormat={}{0:P0}}" Width="50" VerticalAlignment="Center"/>
+                <Slider Minimum="0" Maximum="0.5" Value="{Binding GamepadDeadzone}" TickFrequency="0.02" IsSnapToTickEnabled="True"/>
+            </DockPanel>
+
+            <Separator Margin="0,8,0,16"/>
+
+            <CheckBox Content="Include a raw drive scan (in addition to known install folders)"
+                      IsChecked="{Binding EnableRawDriveScan}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="Raw Drive Scan Max Depth" Style="{StaticResource SubtitleTextStyle}"/>
+            <DockPanel Margin="0,4,0,16" IsEnabled="{Binding EnableRawDriveScan}">
+                <TextBlock Text="{Binding RawDriveScanMaxDepth}" Width="30" VerticalAlignment="Center"/>
+                <Slider Minimum="1" Maximum="8" Value="{Binding RawDriveScanMaxDepth}" TickFrequency="1" IsSnapToTickEnabled="True"/>
+            </DockPanel>
+
+            <TextBlock Text="Additional Library Folders" Style="{StaticResource SubtitleTextStyle}"/>
+            <ListBox ItemsSource="{Binding AdditionalLibraryFolders}" Height="90" Margin="0,4,0,8"/>
+            <Button Content="Add Folder..." Style="{StaticResource ToolbarButtonStyle}" HorizontalAlignment="Left"
+                    Command="{Binding AddLibraryFolderCommand}" Margin="0,0,0,16"/>
+
+            <Separator Margin="0,8,0,16"/>
+
+            <CheckBox Content="Enable online metadata &amp; art providers" IsChecked="{Binding EnableOnlineMetadata}" Margin="0,0,0,12"/>
+
+            <TextBlock Text="SteamGridDB API Key" Style="{StaticResource SubtitleTextStyle}"/>
+            <TextBox Text="{Binding SteamGridDbApiKey, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,16"/>
+
+            <TextBlock Text="IGDB (Twitch) Client ID" Style="{StaticResource SubtitleTextStyle}"/>
+            <TextBox Text="{Binding IgdbClientId, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,16"/>
+
+            <TextBlock Text="IGDB (Twitch) Client Secret" Style="{StaticResource SubtitleTextStyle}"/>
+            <PasswordBox x:Name="IgdbSecretBox" Margin="0,4,0,24" PasswordChanged="IgdbSecretBox_PasswordChanged"/>
+
+            <Button Content="Save" Style="{StaticResource ToolbarButtonStyle}" HorizontalAlignment="Right"
+                    Command="{Binding SaveCommand}" Click="SaveButton_Click"/>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>ReadyUp</AssemblyName>
+    <RootNamespace>ReadyUp.App</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReadyUp.Core\ReadyUp.Core.csproj" />
+    <ProjectReference Include="..\ReadyUp.Data\ReadyUp.Data.csproj" />
+    <ProjectReference Include="..\ReadyUp.Scanning\ReadyUp.Scanning.csproj" />
+    <ProjectReference Include="..\ReadyUp.Metadata\ReadyUp.Metadata.csproj" />
+    <ProjectReference Include="..\ReadyUp.Input\ReadyUp.Input.csproj" />
+  </ItemGroup>
+
+</Project>
