@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <Company>ReadyUp</Company>
+    <Product>ReadyUp</Product>
+    <NeutralLanguage>en</NeutralLanguage>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <!--
+    Microsoft.NET.Sdk's own ImplicitUsings only cover System, System.Collections.Generic,
+    System.IO, System.Linq, and System.Threading.Tasks — not System.Threading itself, which
+    every project here needs for CancellationToken/SemaphoreSlim/Timer. Adding it once here
+    avoids repeating "using System.Threading;" in every file across the solution.
+  -->
+  <ItemGroup>
+    <Using Include="System.Threading" />
+  </ItemGroup>
+</Project>
