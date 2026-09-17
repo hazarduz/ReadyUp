@@ -41,24 +41,7 @@ jobs:
 
       - name: Smoke test - launch the published exe
         shell: pwsh
-        run: |
-          $proc = Start-Process -FilePath "publish/win-x64/ReadyUp.exe" -PassThru
-          Start-Sleep -Seconds 10
-          $proc.Refresh()
-
-          if ($proc.HasExited) {
-            Write-Error "ReadyUp exited within 10 seconds of starting (exit code $($proc.ExitCode)) - it likely crashed on startup before showing any window."
-            exit 1
-          }
-
-          if ($proc.MainWindowTitle -ne "ReadyUp") {
-            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
-            Write-Error "ReadyUp is running but its main window title is '$($proc.MainWindowTitle)' instead of 'ReadyUp' - it's likely stuck on an error dialog instead of showing the library window."
-            exit 1
-          }
-
-          Write-Host "Smoke test passed: main window '$($proc.MainWindowTitle)' is showing."
-          Stop-Process -Id $proc.Id -Force
+        run: ./.github/scripts/smoke-test.ps1 -ExePath "publish/win-x64/ReadyUp.exe"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
